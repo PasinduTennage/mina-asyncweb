@@ -143,8 +143,8 @@
         <version>2.0.2</version>
         <configuration>
           <encoding>UTF-8</encoding>
-          <source>1.5</source>
-          <target>1.5</target>
+          <source>1.8</source>
+          <target>1.8</target>
           <debug>true</debug>
           <optimize>true</optimize>
           <showDeprecations>true</showDeprecations>
@@ -279,7 +279,12 @@
       <dependency>
         <groupId>org.slf4j</groupId>
         <artifactId>slf4j-log4j12</artifactId>
-        <version>1.7.1</version>
+        <version>1.7.5</version>
+      </dependency>
+      <dependency>
+        <groupId>org.slf4j</groupId>
+        <artifactId>slf4j-simple</artifactId>
+        <version>1.7.5</version>
       </dependency>
 
       <dependency>
@@ -298,6 +303,18 @@
         <groupId>log4j</groupId>
         <artifactId>log4j</artifactId>
         <version>1.2.17</version>
+      </dependency>
+
+      <dependency>
+        <groupId>mysql</groupId>
+        <artifactId>mysql-connector-java</artifactId>
+        <version>8.0.12</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.pasindu</groupId>
+        <artifactId>core</artifactId>
+        <version>1.0-SNAPSHOT</version>
       </dependency>
 
       <dependency>
@@ -330,6 +347,12 @@
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-log4j12</artifactId>
       <scope>provided</scope>
+      <version>1.7.5</version>
+    </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-simple</artifactId>
+      <version>1.7.5</version>
     </dependency>
     <dependency>
       <groupId>log4j</groupId>
@@ -343,3 +366,6 @@
     </dependency>
   </dependencies>
 </project>
+
+
+

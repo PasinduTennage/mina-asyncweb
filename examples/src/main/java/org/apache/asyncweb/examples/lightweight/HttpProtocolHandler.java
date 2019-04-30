@@ -20,9 +20,8 @@
 package org.apache.asyncweb.examples.lightweight;
 
 import java.io.IOException;
-import java.util.Map;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.nio.charset.Charset;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.mina.core.session.IdleStatus;
@@ -36,6 +35,8 @@ import org.apache.asyncweb.common.HttpResponseStatus;
 import org.apache.asyncweb.common.MutableHttpResponse;
 import org.apache.asyncweb.common.DefaultHttpResponse;
 import org.apache.asyncweb.common.HttpHeaderConstants;
+
+
 
 public class HttpProtocolHandler implements IoHandler {
     private static final int CONTENT_PADDING = 0; // 101
@@ -51,28 +52,77 @@ public class HttpProtocolHandler implements IoHandler {
     public void exceptionCaught(IoSession session, Throwable cause)
             throws Exception {
         if (!(cause instanceof IOException)) {
-	        cause.printStackTrace();
+            cause.printStackTrace();
         }
         session.close();
+    }
+
+    public Dictionary extractParameters(Map hashParameters){
+        Dictionary parameters = new Hashtable();
+        Iterator it = hashParameters.entrySet().iterator();
+        while (it.hasNext()) {
+            Map.Entry pair = (Map.Entry)it.next();
+            parameters.put(pair.getKey(), ((ArrayList) pair.getValue()).get(0) );
+            // it.remove(); // avoids a ConcurrentModificationException
+        }
+
+        return parameters;
     }
 
     public void messageReceived(IoSession session, Object message)
             throws Exception {
         HttpRequest req = (HttpRequest) message;
-        String path = req.getRequestUri().getPath();
+        String path = req.getRequestUri().getPath(); //path: /echo
+        String end_point = path;
+        Dictionary parameters = this.extractParameters(req.getParameters());
+        String response = "";
+        switch (end_point) {
+            case "/io":
+                response= new IOHandler().handleRequest(parameters);
+                break;
+            case "/cpu":
+                response= new CPUHandler().handleRequest(parameters);
+                break;
+            case "/db":
+                response= new DBHandler().handleRequest(parameters);
+                break;
+            case "/memory":
+                response= new MemoryHandler().handleRequest(parameters);
+                break;
+            default:
+                response = "No end point found";
+        }
 
         MutableHttpResponse res;
-        if (path.startsWith("/size/")) {
-            doDataResponse(session, req);
-        } else if (path.startsWith("/delay/")) {
-            doAsynchronousDelayedResponse(session, req);
-        } else if (path.startsWith("/adelay/")) {
-            doAsynchronousDelayedResponse(session, req);
-        } else {
-            res = new DefaultHttpResponse();
-            res.setStatus(HttpResponseStatus.OK);
-            writeResponse(session, req, res);
+
+
+//        if (path.startsWith("/size/")) {
+//            doDataResponse(session, req);
+//        } else if (path.startsWith("/delay/")) {
+//            doAsynchronousDelayedResponse(session, req);
+//        } else if (path.startsWith("/adelay/")) {
+//            doAsynchronousDelayedResponse(session, req);
+//        } else {
+        res = new DefaultHttpResponse();
+
+
+
+        IoBuffer bb = IoBuffer.allocate(1024);
+        bb.setAutoExpand(true);
+        bb.putString(response.toString(), Charset.forName("UTF-8").newEncoder());
+        bb.flip();
+        res.setContent(bb);
+
+//        res.setHeader("Pragma", "no-cache");
+//        res.setHeader("Cache-Control", "no-cache");
+        res.setStatus(HttpResponseStatus.OK);
+
+        WriteFuture future = session.write(res);
+        if (!HttpHeaderConstants.VALUE_KEEP_ALIVE.equalsIgnoreCase(
+                res.getHeader( HttpHeaderConstants.KEY_CONNECTION))) {
+            future.addListener(IoFutureListener.CLOSE);
         }
+
     }
 
     private void writeResponse(IoSession session, HttpRequest req,
